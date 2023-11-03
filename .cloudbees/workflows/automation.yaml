@@ -1,3 +1,13 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+name: My automation
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
   ci-job:
     steps:
       - uses: docker://alpine/git:latest
@@ -13,3 +23,13 @@
         uses: docker://golang:1.20
         run: |
           go test -v ./...
+      - name: Set up Docker Hub registry
+        uses: cloudbees-io/configure-oci-credentials@v1
+        with:
+          registry: index.docker.io # or docker.io
+          username: ${{ vars.QUICKSTART_DOCKER_USERNAME }}
+          password: ${{ secrets.QUICKSTART_DOCKER_PASSWORD }}
+      - name: Push image to OCI registry
+        uses: cloudbees-io/kaniko@v1
+        with:
+            destination: index.docker.io/${{ vars.QUICKSTART_DOCKER_USERNAME }}/my-sample-go-app:1.0.0
